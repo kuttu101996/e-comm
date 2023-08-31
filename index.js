@@ -132,8 +132,6 @@ app.delete("/combo/:id", async (req, res) => {
 
 app.get("/cart", async (req, res) => {
   try {
-    // const allCart = new
-
     const cartWithItems = await Cart.find()
       .populate({
         path: "cartProduct",
@@ -150,7 +148,131 @@ app.get("/cart", async (req, res) => {
 
     if (cartWithItems) {
       return res.json(cartWithItems);
-    } else return res.send({ msg: "No Combo Available at this time" });
+    } else return res.send({ msg: "No Cart Data available" });
+  } catch (error) {
+    res.send({ msg: "Catch Block", error });
+  }
+});
+
+app.post("/cartCheckAdd", async (req, res) => {
+  const data = req.body;
+  try {
+    let cartWithItems = await Cart.find()
+      .populate({
+        path: "cartProduct",
+        model: "Product",
+      })
+      .populate({
+        path: "cartCombo",
+        model: "ComboOffer",
+        populate: {
+          path: "comboItems", // Assuming the field name is "comboItems"
+          model: "Product",
+        },
+      });
+
+    let d;
+    for (let i = 0; i < cartWithItems.length; i++) {
+      if (cartWithItems[i].cartProduct?.name === data.name) {
+        cartWithItems[i].quantity = Number(cartWithItems[i].quantity) + 1;
+        await cartWithItems[i].save();
+        d = await Cart.find()
+          .populate({
+            path: "cartProduct",
+            model: "Product",
+          })
+          .populate({
+            path: "cartCombo",
+            model: "ComboOffer",
+            populate: {
+              path: "comboItems", // Assuming the field name is "comboItems"
+              model: "Product",
+            },
+          });
+      } else if (cartWithItems[i].cartCombo?.comboName === data.name) {
+        cartWithItems[i].quantity = Number(cartWithItems[i].quantity) + 1;
+        await cartWithItems[i].save();
+        d = await Cart.find()
+          .populate({
+            path: "cartProduct",
+            model: "Product",
+          })
+          .populate({
+            path: "cartCombo",
+            model: "ComboOffer",
+            populate: {
+              path: "comboItems", // Assuming the field name is "comboItems"
+              model: "Product",
+            },
+          });
+      }
+    }
+
+    if (d) {
+      return res.send({ msg: "Quantity Added", data: d });
+    } else return res.send({ msg: "No Cart data available" });
+  } catch (error) {
+    res.send({ msg: "Catch Block", error });
+  }
+});
+
+app.post("/cartCheckReduce", async (req, res) => {
+  const data = req.body;
+  try {
+    let cartWithItems = await Cart.find()
+      .populate({
+        path: "cartProduct",
+        model: "Product",
+      })
+      .populate({
+        path: "cartCombo",
+        model: "ComboOffer",
+        populate: {
+          path: "comboItems", // Assuming the field name is "comboItems"
+          model: "Product",
+        },
+      });
+
+    let d;
+    for (let i = 0; i < cartWithItems.length; i++) {
+      if (cartWithItems[i].cartProduct?.name === data.name) {
+        cartWithItems[i].quantity = Number(cartWithItems[i].quantity) - 1;
+        await cartWithItems[i].save();
+        d = await Cart.find()
+          .populate({
+            path: "cartProduct",
+            model: "Product",
+          })
+          .populate({
+            path: "cartCombo",
+            model: "ComboOffer",
+            populate: {
+              path: "comboItems", // Assuming the field name is "comboItems"
+              model: "Product",
+            },
+          });
+      } else if (cartWithItems[i].cartCombo?.comboName === data.name) {
+        cartWithItems[i].quantity = Number(cartWithItems[i].quantity) + 1;
+        await cartWithItems[i].save();
+        d = await Cart.find()
+          .populate({
+            path: "cartProduct",
+            model: "Product",
+          })
+          .populate({
+            path: "cartCombo",
+            model: "ComboOffer",
+            populate: {
+              path: "comboItems", // Assuming the field name is "comboItems"
+              model: "Product",
+            },
+          });
+      }
+    }
+
+    if (d) {
+      return res.send({ msg: "Quantity Reduced", data: d });
+    } else return res.send({ msg: "No Cart data available" });
   } catch (error) {
     res.send({ msg: "Catch Block", error });
   }
